@@ -14,6 +14,7 @@ sequential scans across four spatial and temporal query patterns, and evaluates 
 
 ## Table of Contents
 
+0. [Project structure](#-project-struture)
 1. [Prerequisites](#1-prerequisites)
 2. [Python environment](#2-python-environment)
 3. [Database setup](#3-database-setup)
@@ -25,6 +26,17 @@ sequential scans across four spatial and temporal query patterns, and evaluates 
 9. [File reference](#9-file-reference)
 
 ---
+## 0. Project structure
+
+Clone the repository into a folder of your choice:
+
+```bash
+git clone https://github.com/chwon9-jpg/Weather-Interpolation.git
+cd Weather-Interpolation
+```
+
+All files should remain in this single folder. Do not move individual files — the
+Python scripts reference each other and the `sql/` subfolder by relative path.
 
 ## 1. Prerequisites
 
