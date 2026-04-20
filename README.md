@@ -225,10 +225,7 @@ SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 |---|---|---|---|---|
 | 6.85 | 3 | 212.0 | 574.5 | 3 |
 
-
-**Output columns**: `predicted_temp_c`, `k_used`, `query_elevation_m`,
-`elev_stddev_m`, `neighbours_found`.
-
+**Output intepretation**
 | Column | Meaning |
 |---|---|
 | `predicted_temp_c` | Predicted temperature in °C |
@@ -236,6 +233,14 @@ SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 | `query_elevation_m` | Elevation used for lapse-rate correction (supplied or proxied) |
 | `elev_stddev_m` | Elevation std dev of the 20 nearest grid points (drives the choice of k) |
 | `neighbours_found` | Number of training neighbours actually found at that timestamp 
+
+> **Note on `query_elevation_m`**: The query point can be any (lon, lat) coordinate
+> and does not have to coincide with a grid point. Since elevations are only stored
+> for the ~3,800 grid points, the SQL function estimates the query elevation by using
+> the nearest grid point's stored elevation as a proxy. You can override this by
+> supplying the elevation explicitly as the 4th argument. The Python CLI (`predict.py`)
+> avoids this approximation entirely by calling the Open-Meteo Elevation API to fetch
+> the true elevation for the exact query coordinates.
 
 > **Data availability**: predictions are only possible for timestamps that have
 > been ingested. Only March 2026 data is available after following step 4.
