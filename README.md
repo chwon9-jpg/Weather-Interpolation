@@ -1,5 +1,7 @@
 # France Weather Grid — Query Optimisation Project
 
+## Authors: Hoang Dung Vu Minh and Christopher Won
+
 Hourly weather data (temperature, humidity, rain, soil temperature) is fetched from
 **Open-Meteo** for a 0.18° latitude/longitude grid covering France (~3,800 points,
 ~20 km spacing) and stored in **PostgreSQL + PostGIS** with monthly table partitioning.
