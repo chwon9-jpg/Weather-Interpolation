@@ -248,7 +248,7 @@ SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 > and does not have to coincide with a grid point. Since elevations are only stored
 > for the ~3,800 grid points, the SQL function estimates the query elevation by using
 > the nearest grid point's stored elevation as a proxy. You can override this by
-> supplying the elevation explicitly as the 4th argument. The Python CLI (`predict.py`)
+> supplying the elevation explicitly as the 4th argument such as '212' in the above example. The Python CLI (`predict.py`)
 > avoids this approximation entirely by calling the Open-Meteo Elevation API to fetch
 > the true elevation for the exact query coordinates.
 
