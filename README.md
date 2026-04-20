@@ -218,6 +218,16 @@ SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 Output columns: `predicted_temp_c`, `k_used`, `query_elevation_m`,
 `elev_stddev_m`, `neighbours_found`.
 
+**Output columns:**
+
+| Column | Meaning |
+|---|---|
+| `predicted_temp_c` | Predicted temperature in °C |
+| `k_used` | Number of neighbours used (3–8, chosen adaptively from elevation std dev) |
+| `query_elevation_m` | Elevation used for lapse-rate correction (supplied or proxied) |
+| `elev_stddev_m` | Elevation std dev of the 20 nearest grid points (drives the choice of k) |
+| `neighbours_found` | Number of training neighbours actually found at that timestamp 
+
 > **Data availability**: predictions are only possible for timestamps that have
 > been ingested. Only March 2026 data is available after following step 4.
 
