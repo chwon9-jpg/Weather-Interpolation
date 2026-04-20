@@ -201,6 +201,16 @@ python predict.py 2.352 48.857 "2026-03-15 12:00"   # Paris
 python predict.py 5.724 45.188 "2026-03-15 12:00"   # Grenoble
 python predict.py -0.579 44.838 "2026-03-10 06:00"  # Bordeaux
 ```
+#### Output for (2.352, 48.857) - Paris:
+```
+Temperature Prediction
+  Location    : (48.857N, 2.352E)
+  Elevation   : 40.0 m
+  Timestamp   : 2026-03-15 12:00 UTC
+  Prediction  : 10.88 C
+  k used      : 8  (elev stddev = 36.8 m)
+  Neighbours  : 8 training points
+```
 
 > Fetches the query point's elevation from the Open-Meteo Elevation API, then
 > runs the adaptive kNN + lapse-rate pipeline against the database.
