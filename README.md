@@ -223,7 +223,7 @@ SELECT * FROM predict_temperature(2.352, 48.857, '2026-03-15 12:00+00');
 #### Outcome:
 | `predicted_temp_c` | `k_used` | `query_elevation_m` | `elev_stddev_m` | `neighbours_found` |
 |---|---|---|---|---|
-| 10.90 | 8 | 38.0 | 36.8 | 8 |
+| 6.85 | 3 | 212.0 | 574.5 | 3 |
 
 
 **Output columns**: `predicted_temp_c`, `k_used`, `query_elevation_m`,
