@@ -218,7 +218,7 @@ SELECT * FROM predict_temperature(2.352, 48.857, '2026-03-15 12:00+00');
 
 #### Example:
 ```sql
-SELECT * FROM predict_temperature(2.352, 48.857, '2026-03-15 12:00+00');
+SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 ```
 #### Outcome:
 | `predicted_temp_c` | `k_used` | `query_elevation_m` | `elev_stddev_m` | `neighbours_found` |
