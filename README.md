@@ -107,7 +107,7 @@ psql -U postgres -d imperial_db -f sql/02_indexes.sql
 psql -U postgres -d imperial_db -f sql/03_seed_france.sql
 psql -U postgres -d imperial_db -f sql/04_predict_function.sql
 ```
-Note: `psql -f` commandes must be run from the terminal inside the `Weather-Interpolation` folder, not from inside psql, otherwise encounter 'file not found' errors.
+Note: `psql -f` commands must be run from the terminal inside the `Weather-Interpolation` folder, not from inside psql. Otherwise, encounter 'file not found' errors.
 
 What each file does:
 
