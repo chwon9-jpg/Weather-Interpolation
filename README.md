@@ -200,6 +200,18 @@ The three strategies compared are:
 
 ## 8. Query a temperature prediction
 
+> **Python vs SQL accuracy**: When querying via `predict.py`, the elevation of the
+> query point is fetched directly from the Open-Meteo Elevation API for the exact
+> (lon, lat) coordinate, giving a precise lapse-rate correction. When querying via
+> the SQL function (`predict_temperature()`), the elevation is estimated using the
+> nearest grid point as a proxy (~20 km away). For flat regions like Paris this
+> difference is negligible, but in complex terrain such as the Alps or Pyrenees,
+> the proxy elevation can deviate significantly from the true elevation, leading to
+> a less accurate lapse-rate correction and therefore a less accurate temperature
+> prediction. For the highest accuracy in mountainous areas, always prefer `predict.py`
+> or supply the elevation explicitly as the 4th argument to the SQL function.
+
+
 ### From the terminal (Python)
 
 ```bash
@@ -256,13 +268,6 @@ SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 | `elev_stddev_m` | Elevation std dev of the 20 nearest grid points (drives the choice of k) |
 | `neighbours_found` | Number of training neighbours actually found at that timestamp 
 
-> **Note on `query_elevation_m`**: The query point can be any (lon, lat) coordinate
-> and does not have to coincide with a grid point. Since elevations are only stored
-> for the ~3,800 grid points, the SQL function estimates the query elevation by using
-> the nearest grid point's stored elevation as a proxy. You can override this by
-> supplying the elevation explicitly as the 4th argument such as '212' in the above example. The Python CLI (`predict.py`)
-> avoids this approximation entirely by calling the Open-Meteo Elevation API to fetch
-> the true elevation for the exact query coordinates.
 
 > **Data availability**: predictions are only possible for timestamps that have
 > been ingested. Only March 2026 data is available after following step 4.
