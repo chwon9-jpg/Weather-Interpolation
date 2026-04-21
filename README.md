@@ -70,7 +70,10 @@ venv\Scripts\activate
 source venv/bin/activate
 
 # Install dependencies
-pip install pg8000 requests schedule numpy folium
+pip install pg8000 requests schedule numpy
+
+# Optional — only needed to generate the interactive France grid map
+pip install folium
 ```
 
 ---
