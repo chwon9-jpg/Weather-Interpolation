@@ -7,6 +7,7 @@
 -- p_timestamp is UTC hour to predict
 -- p_elevation is elevation of query point in metres (optional — if NULL, uses the nearest grid point's elevation as proxy)
 
+
 CREATE OR REPLACE FUNCTION predict_temperature(
     p_lon         DOUBLE PRECISION,
     p_lat         DOUBLE PRECISION,
@@ -48,7 +49,6 @@ BEGIN
     ) n;
 
     v_k := GREATEST(3, LEAST(8, ROUND(8 - 5 * (v_elev_stddev / 400.0))));
-
 
     RETURN QUERY
     SELECT

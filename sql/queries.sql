@@ -2,7 +2,8 @@
 -- kNN spatial queries for temperature prediction
 -- Replace :target_lon, :target_lat, :target_time, :k with actual values.
 
-
+-- SETUP: mark locations that fall inside any test zone
+-- Run once after populating both `locations` and `test_zones`.
 UPDATE locations l
 SET    is_test_zone = TRUE
 WHERE  EXISTS (
@@ -12,6 +13,8 @@ WHERE  EXISTS (
 );
 
 
+-- QUERY: raw kNN neighbours
+-- Returns the k nearest training observations to a target point at a given hour.
 SELECT
     l.name,
     l.lat,
@@ -30,6 +33,8 @@ ORDER  BY l.geog <-> ST_MakePoint(:target_lon, :target_lat)::geography
 LIMIT  :k;
 
 
+-- QUERY: distance-weighted temperature prediction (IDW)
+-- Inverse-Distance Weighting over k neighbours.
 WITH neighbours AS (
     SELECT
         wo.temperature,
@@ -52,6 +57,7 @@ SELECT
 FROM neighbours;
 
 
+-- QUERY: batch evaluation — MAE & RMSE over all test-zone observations
 WITH test_obs AS (
     SELECT
         wo.id,

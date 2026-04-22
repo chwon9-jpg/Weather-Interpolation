@@ -1,6 +1,6 @@
 -- benchmark/time_range.sql
 -- Compares time-range query performance across three index strategies:
--- No indes, BRIN, B-tree
+--  No index, BRIN, B-tree  
 
 -- BASELINE: sequential scan (no index on observed_at)
 DROP INDEX IF EXISTS idx_obs_time_brin;
@@ -31,7 +31,7 @@ FROM   weather_observations
 WHERE  observed_at BETWEEN '2026-03-01 00:00:00+00'
                        AND '2026-03-07 23:00:00+00';
 
--- COMBINED: spatial filter + time range (realistic production query)
+-- COMBINED: spatial filter + time range
 CREATE INDEX IF NOT EXISTS idx_locations_geog_gist ON locations USING GIST(geog);
 
 EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT)
