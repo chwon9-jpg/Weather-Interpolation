@@ -3,10 +3,9 @@ ingest.py
 Fetches hourly weather data from Open-Meteo for the France 0.18° grid (~20 km)
 and inserts it into PostgreSQL.
 
-backfill   — fetches one full month of historical data (run once per month)
+Usage: python ingest.py backfill 2026-03
 
 Requirements: pip install requests pg8000
-Usage:        python ingest.py backfill 2026-03
 """
 
 import sys
@@ -24,15 +23,10 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-
 DB = dict(host="localhost", port=5432, database="imperial_db",
           user="postgres", password="Imperial")
 
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
-
-HOURLY_VARS = (
-    "temperature_2m"
-)
 
 LAT_START, LAT_END, LAT_STEP = 42.0, 51.25, 0.18
 LON_START, LON_END, LON_STEP = -5.0,  8.25, 0.18
@@ -54,17 +48,14 @@ def fetch_archive(lat: float, lon: float, start: str, end: str) -> list[dict]:
     r = requests.get(ARCHIVE_URL, params={
         "latitude": lat, "longitude": lon,
         "start_date": start, "end_date": end,
-        "hourly": HOURLY_VARS, "timezone": "UTC",
+        "hourly": "temperature_2m", "timezone": "UTC",
     }, timeout=30)
     r.raise_for_status()
-    return _parse_hourly(r.json()["hourly"])
-
-
-def _parse_hourly(data: dict) -> list[dict]:
+    data = r.json()["hourly"]
     return [
         {
             "observed_at": datetime.fromisoformat(ts).replace(tzinfo=timezone.utc),
-            "temperature": data["temperature_2m"][i]
+            "temperature": data["temperature_2m"][i],
         }
         for i, ts in enumerate(data["time"])
     ]
@@ -95,7 +86,7 @@ def upsert_observations(cur, location_id: int, rows: list[dict]) -> None:
         """
         INSERT INTO weather_observations
             (location_id, observed_at, temperature)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s)
         ON CONFLICT (location_id, observed_at) DO UPDATE SET
             temperature = EXCLUDED.temperature
         """,
@@ -112,7 +103,6 @@ def backfill(year: int, month: int) -> None:
     log.info("Backfill %s → %s for %d grid points", start_str, end_str, len(grid))
 
     conn = connect()
-
     try:
         for idx, (lat, lon) in enumerate(grid, 1):
             log.info("[%d/%d] (%s, %s)", idx, len(grid), lat, lon)
