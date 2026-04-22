@@ -3,19 +3,16 @@ ingest.py
 Fetches hourly weather data from Open-Meteo for the France 0.18° grid (~20 km)
 and inserts it into PostgreSQL.
 
-Two modes:
-  backfill   — fetches one full month of historical data (run once per month)
-  live       — runs continuously, pulling the latest hour every 60 minutes
+backfill   — fetches one full month of historical data (run once per month)
 
-Requirements: pip install requests pg8000 schedule
+Requirements: pip install requests pg8000
 Usage:        python ingest.py backfill 2026-03
-              python ingest.py
 """
 
+import sys
 import time
 import logging
 import requests
-import schedule
 import pg8000.dbapi as pg
 from datetime import datetime, timezone
 from calendar import monthrange
@@ -27,13 +24,11 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 DB = dict(host="localhost", port=5432, database="imperial_db",
           user="postgres", password="Imperial")
 
-ARCHIVE_URL  = "https://archive-api.open-meteo.com/v1/archive"
-FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
+ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 HOURLY_VARS = (
     "temperature_2m,"
@@ -47,8 +42,6 @@ LON_START, LON_END, LON_STEP = -5.0,  8.25, 0.18
 REQUEST_DELAY_S = 0.1
 
 
-# ─── GRID ────────────────────────────────────────────────────────────────────
-
 def france_grid() -> list[tuple[float, float]]:
     points, lat = [], LAT_START
     while lat <= LAT_END + 1e-9:
@@ -60,8 +53,6 @@ def france_grid() -> list[tuple[float, float]]:
     return points
 
 
-# ─── OPEN-METEO FETCH ────────────────────────────────────────────────────────
-
 def fetch_archive(lat: float, lon: float, start: str, end: str) -> list[dict]:
     r = requests.get(ARCHIVE_URL, params={
         "latitude": lat, "longitude": lon,
@@ -70,17 +61,6 @@ def fetch_archive(lat: float, lon: float, start: str, end: str) -> list[dict]:
     }, timeout=30)
     r.raise_for_status()
     return _parse_hourly(r.json()["hourly"])
-
-
-def fetch_latest_hour(lat: float, lon: float) -> list[dict]:
-    r = requests.get(FORECAST_URL, params={
-        "latitude": lat, "longitude": lon,
-        "hourly": HOURLY_VARS, "timezone": "UTC", "forecast_days": 1,
-    }, timeout=30)
-    r.raise_for_status()
-    rows = _parse_hourly(r.json()["hourly"])
-    cutoff = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-    return [row for row in rows if row["observed_at"] <= cutoff][-2:]
 
 
 def _parse_hourly(data: dict) -> list[dict]:
@@ -96,8 +76,6 @@ def _parse_hourly(data: dict) -> list[dict]:
     ]
 
 
-# ─── DATABASE ────────────────────────────────────────────────────────────────
-
 def connect():
     return pg.connect(**DB)
 
@@ -109,7 +87,6 @@ def ensure_partition(conn, month_start: str) -> None:
 
 
 def get_or_create_location(cur, lat: float, lon: float) -> int:
-    # Lookup by lat/lon — avoids creating duplicate rows on repeated runs
     cur.execute(
         "SELECT id FROM locations WHERE lat = %s AND lon = %s LIMIT 1",
         (lat, lon),
@@ -142,8 +119,6 @@ def upsert_observations(cur, location_id: int, rows: list[dict]) -> None:
     )
 
 
-# ─── BACKFILL ────────────────────────────────────────────────────────────────
-
 def backfill(year: int, month: int) -> None:
     days      = monthrange(year, month)[1]
     start_str = f"{year}-{month:02d}-01"
@@ -159,8 +134,8 @@ def backfill(year: int, month: int) -> None:
         for idx, (lat, lon) in enumerate(grid, 1):
             log.info("[%d/%d] (%s, %s)", idx, len(grid), lat, lon)
             try:
-                rows = fetch_archive(lat, lon, start_str, end_str)
-                cur  = conn.cursor()
+                rows   = fetch_archive(lat, lon, start_str, end_str)
+                cur    = conn.cursor()
                 loc_id = get_or_create_location(cur, lat, lon)
                 upsert_observations(cur, loc_id, rows)
                 conn.commit()
@@ -174,46 +149,10 @@ def backfill(year: int, month: int) -> None:
     log.info("Backfill complete.")
 
 
-# ─── LIVE UPDATE ─────────────────────────────────────────────────────────────
-
-def live_update() -> None:
-    now = datetime.now(timezone.utc)
-    log.info("Live update at %s", now.strftime("%Y-%m-%d %H:%M UTC"))
-    grid = france_grid()
-
-    conn = connect()
-    ensure_partition(conn, now.strftime("%Y-%m-01"))
-
-    try:
-        for lat, lon in grid:
-            try:
-                rows   = fetch_latest_hour(lat, lon)
-                cur    = conn.cursor()
-                loc_id = get_or_create_location(cur, lat, lon)
-                upsert_observations(cur, loc_id, rows)
-                conn.commit()
-            except Exception as exc:
-                conn.rollback()
-                log.warning("  (%s, %s) SKIPPED: %s", lat, lon, exc)
-            time.sleep(REQUEST_DELAY_S)
-    finally:
-        conn.close()
-
-    log.info("Live update complete.")
-
-
-# ─── MAIN ────────────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) == 3 and sys.argv[1] == "backfill":
         year, month = map(int, sys.argv[2].split("-"))
         backfill(year, month)
     else:
-        log.info("Starting live sync — updates every hour.")
-        live_update()
-        schedule.every().hour.at(":00").do(live_update)
-        while True:
-            schedule.run_pending()
-            time.sleep(30)
+        print("Usage: python ingest.py backfill 2026-03")
+        sys.exit(1)

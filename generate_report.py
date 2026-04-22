@@ -1,8 +1,7 @@
 """
 generate_report.py
 Runs all benchmarks and kNN prediction evaluation,
-then produces a self-contained HTML report (report.html).
-
+then produces a self-contained HTML report: report.html
 Requirements: pip install pg8000
 Usage:        python generate_report.py
 """
@@ -135,7 +134,7 @@ HTML = """<!DOCTYPE html>
      and stored in <strong>PostgreSQL + PostGIS</strong> with monthly table partitioning.
      Ten French cities are withheld as test zones to evaluate spatial generalisation of a
      <strong>kNN Inverse-Distance Weighting</strong> temperature prediction model implemented
-     entirely in SQL. The core deliverable benchmarks GiST, B-tree, and BRIN indexes against
+     in SQL and Python. The core deliverable benchmarks GiST, B-tree, and BRIN indexes against
      unindexed sequential scans across four spatial and temporal query patterns.</p>
 </div>
 

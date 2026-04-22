@@ -12,11 +12,6 @@ Lapse rate: 6.5 C per 1000m (standard environmental lapse rate)
 
 Usage:
     python predict.py <longitude> <latitude> <YYYY-MM-DD HH:00>
-
-Examples:
-    python predict.py 2.352 48.857 "2026-03-15 12:00"   # Paris
-    python predict.py 5.724 45.188 "2026-03-15 12:00"   # Grenoble
-    python predict.py -0.579 44.838 "2026-03-10 06:00"  # Bordeaux
 """
 
 import sys
@@ -28,7 +23,7 @@ from ingest import DB
 K_MIN        = 3
 K_MAX        = 8
 ELEV_SCALE   = 400.0
-LAPSE_RATE   = 0.0065   # degrees C per metre
+LAPSE_RATE   = 0.0065  
 
 
 def adaptive_k(elev_stddev: float) -> int:
@@ -47,7 +42,6 @@ def fetch_elevation(lon: float, lat: float) -> float:
 
 
 def predict_temperature(lon: float, lat: float, observed_at: datetime) -> dict:
-    # Step 1 — get query point elevation from API
     query_elevation = fetch_elevation(lon, lat)
 
     conn = pg.connect(**DB)
@@ -55,7 +49,6 @@ def predict_temperature(lon: float, lat: float, observed_at: datetime) -> dict:
 
     geog = f"ST_MakePoint({lon}, {lat})::geography"
 
-    # Step 2 — elevation stddev of 20 nearest training points → choose k
     cur.execute(f"""
         SELECT COALESCE(STDDEV(elevation), 0) FROM (
             SELECT elevation FROM locations
@@ -67,7 +60,6 @@ def predict_temperature(lon: float, lat: float, observed_at: datetime) -> dict:
     elev_stddev = float(cur.fetchone()[0])
     k = adaptive_k(elev_stddev)
 
-    # Step 3 — fetch k nearest neighbours with their elevations and distances
     cur.execute(f"""
         SELECT wo.temperature, l.elevation, ST_Distance(l.geog, {geog}) AS dist_m
         FROM training_observations wo
@@ -84,7 +76,6 @@ def predict_temperature(lon: float, lat: float, observed_at: datetime) -> dict:
     if not neighbours:
         return {"error": f"No training data found for {observed_at}. Only March 2026 is available."}
 
-    # Step 4 — apply lapse rate correction then IDW
     total_weight = 0.0
     weighted_sum = 0.0
     for temp, neighbour_elev, dist_m in neighbours:

@@ -8,12 +8,13 @@ Hourly weather data (temperature, humidity, rain, soil temperature) is fetched f
 
 The core deliverable benchmarks GiST, B-tree, and BRIN indexes against unindexed
 sequential scans across four spatial and temporal query patterns, and evaluates an
-**adaptive kNN + lapse-rate temperature prediction** model implemented entirely in SQL.
+**adaptive kNN + lapse-rate temperature prediction** model implemented in SQL and Python.
 
 ---
 
 ## Table of Contents
 
+0. [Project structure](#0-project-struture)
 1. [Prerequisites](#1-prerequisites)
 2. [Python environment](#2-python-environment)
 3. [Database setup](#3-database-setup)
@@ -25,6 +26,18 @@ sequential scans across four spatial and temporal query patterns, and evaluates 
 9. [File reference](#9-file-reference)
 
 ---
+## 0. Project structure
+
+Clone the repository into a folder of your choice:
+
+```bash
+cd folder_pathway_paste_here
+git clone https://github.com/chwon9-jpg/Weather-Interpolation.git
+cd Weather-Interpolation
+```
+
+All files should remain in this single folder. Do not move individual files — the
+Python scripts reference each other and the `sql/` subfolder by relative path.
 
 ## 1. Prerequisites
 
@@ -34,6 +47,7 @@ sequential scans across four spatial and temporal query patterns, and evaluates 
 | PostGIS extension | 3.x | Install via Stack Builder or `apt install postgis` |
 | Python | 3.11 or 3.12 | |
 | Internet access | — | Open-Meteo APIs (weather + elevation) |
+| Git | - | User needs Git installed to run `git clone` |
 
 ### Install PostGIS (if not already installed)
 
@@ -57,6 +71,9 @@ source venv/bin/activate
 
 # Install dependencies
 pip install pg8000 requests schedule numpy
+
+# Optional — only needed to generate the interactive France grid map
+pip install folium
 ```
 
 ---
@@ -81,7 +98,7 @@ psql -U postgres -d imperial_db
 
 ### 3b. Run the SQL setup scripts
 
-From inside `psql` (or using the `-f` flag), execute in this order:
+From the terminal inside the `Weather-Interpolation` folder, execute the `psql -f` commands in order, and not from inside psql:
 
 ```bash
 psql -U postgres -d imperial_db -f sql/01_schema.sql
@@ -110,6 +127,8 @@ All Python scripts connect using these defaults (edit the `DB` dict at the top o
 DB = dict(host="localhost", port=5432, database="imperial_db",
           user="postgres", password="Imperial")
 ```
+
+Alternatively, run `python run_demo.py`  to execute all steps automatically.
 
 ---
 
@@ -155,7 +174,7 @@ python generate_report.py
 ```
 
 The report opens automatically when done. If it does not open, open `report.html`
-manually from the project folder.
+manually from the project folder. Possible to take up to 5 minutes to generate. 
 
 To run the benchmarks alone (no HTML output):
 
@@ -188,6 +207,18 @@ The three strategies compared are:
 
 ## 8. Query a temperature prediction
 
+> **Python vs SQL accuracy**: When querying via `predict.py`, the elevation of the
+> query point is fetched directly from the Open-Meteo Elevation API for the exact
+> (lon, lat) coordinate, giving a precise lapse-rate correction. When querying via
+> the SQL function (`predict_temperature()`), the elevation is estimated using the
+> nearest grid point as a proxy (~20 km away). For flat regions like Paris this
+> difference is negligible, but in complex terrain such as the Alps or Pyrenees,
+> the proxy elevation can deviate significantly from the true elevation, leading to
+> a less accurate lapse-rate correction and therefore a less accurate temperature
+> prediction. For the highest accuracy in mountainous areas, always prefer `predict.py`
+> or supply the elevation explicitly as the 4th argument to the SQL function.
+
+
 ### From the terminal (Python)
 
 ```bash
@@ -201,22 +232,49 @@ python predict.py 2.352 48.857 "2026-03-15 12:00"   # Paris
 python predict.py 5.724 45.188 "2026-03-15 12:00"   # Grenoble
 python predict.py -0.579 44.838 "2026-03-10 06:00"  # Bordeaux
 ```
+#### Output for (2.352, 48.857) - Paris:
+```
+Temperature Prediction
+  Location    : (48.857N, 2.352E)
+  Elevation   : 40.0 m
+  Timestamp   : 2026-03-15 12:00 UTC
+  Prediction  : 10.88 C
+  k used      : 8  (elev stddev = 36.8 m)
+  Neighbours  : 8 training points
+```
 
 > Fetches the query point's elevation from the Open-Meteo Elevation API, then
 > runs the adaptive kNN + lapse-rate pipeline against the database.
 
 ### From psql (SQL function)
 
+#### Example:
 ```sql
--- Automatic elevation lookup (nearest grid point used as proxy)
 SELECT * FROM predict_temperature(2.352, 48.857, '2026-03-15 12:00+00');
+```
+#### Outcome:
+| `predicted_temp_c` | `k_used` | `query_elevation_m` | `elev_stddev_m` | `neighbours_found` |
+|---|---|---|---|---|
+| 10.90 | 8 | 38.0 | 36.8 | 8 |
 
--- Supply elevation explicitly (metres)
+#### Example:
+```sql
 SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
 ```
+#### Outcome:
+| `predicted_temp_c` | `k_used` | `query_elevation_m` | `elev_stddev_m` | `neighbours_found` |
+|---|---|---|---|---|
+| 6.85 | 3 | 212.0 | 574.5 | 3 |
 
-Output columns: `predicted_temp_c`, `k_used`, `query_elevation_m`,
-`elev_stddev_m`, `neighbours_found`.
+**Output intepretation**
+| Column | Meaning |
+|---|---|
+| `predicted_temp_c` | Predicted temperature in °C |
+| `k_used` | Number of neighbours used (3–8, chosen adaptively from elevation std dev) |
+| `query_elevation_m` | Elevation used for lapse-rate correction (supplied or proxied) |
+| `elev_stddev_m` | Elevation std dev of the 20 nearest grid points (drives the choice of k) |
+| `neighbours_found` | Number of training neighbours actually found at that timestamp 
+
 
 > **Data availability**: predictions are only possible for timestamps that have
 > been ingested. Only March 2026 data is available after following step 4.
@@ -241,6 +299,34 @@ weather-db/
 ├── evaluate_adaptive_k.py         MAE/RMSE comparison of three strategies
 ├── predict.py                     CLI temperature prediction tool
 ├── visualize.py                   France grid map visualisation
-├── migrate_grid.py                Grid migration utility
+├── run_demo.py                    Full pipeline orchestrator — runs all setup steps in one command
+├── dedup_locations.py             Removes duplicate grid point rows and adds a UNIQUE constraint on (lat, lon)
 └── report.html                    Generated HTML report (auto-created)
+
 ```
+## How They All Connect
+
+```
+Open-Meteo APIs
+      │
+      ├─── fetch_elevations.py ──► locations.elevation (DB)
+      │
+      └─── ingest.py ────────────► weather_observations (DB)
+                                          │
+                          ┌───────────────┼───────────────┐
+                          │               │               │
+               evaluate_adaptive_k.py  benchmark_runner.py  predict.py
+               (MAE/RMSE results)      (timing results)    (user query)
+                          │               │
+                          └───────────────┘
+                                  │
+                          generate_report.py
+                                  │
+                            report.html
+```
+
+The database is the central hub. `ingest.py` and `fetch_elevations.py` write into it.
+The SQL schema files define its structure. Everything else reads from it — the benchmark
+runner to measure query performance, the evaluate script to compute prediction errors,
+and the predict script to answer user queries. `generate_report.py` ties the benchmark
+and evaluation results together into the final HTML deliverable.
