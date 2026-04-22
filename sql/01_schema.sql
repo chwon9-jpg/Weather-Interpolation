@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS locations (
     lat          DOUBLE PRECISION NOT NULL,
     lon          DOUBLE PRECISION NOT NULL,
     is_test_zone BOOLEAN NOT NULL DEFAULT FALSE,
+    elevation    DOUBLE PRECISION,
 
     -- Computed column: automatically derived from lat/lon on every INSERT/UPDATE.
     -- Stored on disk so a GiST index can be built on it.
