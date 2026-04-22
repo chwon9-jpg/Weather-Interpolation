@@ -61,7 +61,7 @@ Python scripts reference each other and the `sql/` subfolder by relative path.
 
 ```bash
 # Create and activate a virtual environment
-python -m venv venv
+python -m venv venv or python3 -m venv venv
 
 # Windows
 venv\Scripts\activate
