@@ -60,7 +60,6 @@ def run_sql_file(path: str) -> None:
 
 
 def main():
-    # ── STEP 1: verify connection ─────────────────────────────────────────────
     step(1, "Verify PostgreSQL + PostGIS")
     try:
         conn = pg.connect(**DB)
@@ -80,12 +79,10 @@ def main():
         )
         sys.exit(1)
 
-    # ── STEP 2: run SQL setup files ───────────────────────────────────────────
     step(2, "Create schema, indexes, seed France grid, create March 2026 partition")
     for filename in SQL_FILES:
         run_sql_file(os.path.join(SQL_DIR, filename))
 
-    # ── STEP 3: backfill March 2026 data ──────────────────────────────────────
     step(3, "Backfill March 2026 data from Open-Meteo (~2,000 grid points)")
     print("  This takes ~7 minutes. Press Ctrl+C to skip.")
     try:
@@ -98,17 +95,14 @@ def main():
     except subprocess.CalledProcessError as e:
         print(f"  ERROR: {e}")
 
-    # ── STEP 4: run benchmarks ────────────────────────────────────────────────
     step(4, "Run query benchmarks")
     from benchmark_runner import run_all
     run_all()
 
-    # ── STEP 5: generate HTML report ──────────────────────────────────────────
     step(5, "Generate HTML report")
     import generate_report
     generate_report.main()
 
-    # ── STEP 6: open France grid map ──────────────────────────────────────────
     step(6, "Open France grid map")
     map_path = os.path.abspath("france_grid.html")
     if os.path.exists(map_path):
