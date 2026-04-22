@@ -73,7 +73,6 @@ def main():
     conn = pg.connect(**DB)
     cur  = conn.cursor()
 
-    # Fetch all test zone locations with their city name and elevation
     cur.execute("""
         SELECT l.id, ST_AsText(l.geog) AS geog_wkt, l.elevation,
                (SELECT tz.name FROM test_zones tz ORDER BY tz.center_geog <-> l.geog LIMIT 1) AS city
@@ -82,7 +81,6 @@ def main():
     test_locs = cur.fetchall()
     log.info("Test locations: %d", len(test_locs))
 
-    # Fetch all March 2026 timestamps
     cur.execute("""
         SELECT DISTINCT observed_at FROM weather_observations
         WHERE observed_at >= '2026-03-01' AND observed_at < '2026-04-01'
@@ -127,7 +125,6 @@ def main():
 
     conn.close()
 
-    # Print results
     print()
     print(f"{'City':<14} {'Fix MAE':<10} {'Adp MAE':<10} {'Lps MAE':<10} {'Fix RMSE':<10} {'Adp RMSE':<10} {'Lps RMSE':<10} Best")
     print("-" * 82)
