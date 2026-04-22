@@ -31,10 +31,7 @@ DB = dict(host="localhost", port=5432, database="imperial_db",
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 HOURLY_VARS = (
-    "temperature_2m,"
-    "relativehumidity_2m,"
-    "rain,"
-    "soil_temperature_7_to_28cm"
+    "temperature_2m"
 )
 
 LAT_START, LAT_END, LAT_STEP = 42.0, 51.25, 0.18
@@ -67,10 +64,7 @@ def _parse_hourly(data: dict) -> list[dict]:
     return [
         {
             "observed_at": datetime.fromisoformat(ts).replace(tzinfo=timezone.utc),
-            "temperature": data["temperature_2m"][i],
-            "humidity":    data["relativehumidity_2m"][i],
-            "rain":        data["rain"][i],
-            "soil_temp":   data["soil_temperature_7_to_28cm"][i],
+            "temperature": data["temperature_2m"][i]
         }
         for i, ts in enumerate(data["time"])
     ]
@@ -106,16 +100,12 @@ def upsert_observations(cur, location_id: int, rows: list[dict]) -> None:
     cur.executemany(
         """
         INSERT INTO weather_observations
-            (location_id, observed_at, temperature, humidity, rain, soil_temp)
+            (location_id, observed_at, temperature)
         VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (location_id, observed_at) DO UPDATE SET
-            temperature = EXCLUDED.temperature,
-            humidity    = EXCLUDED.humidity,
-            rain        = EXCLUDED.rain,
-            soil_temp   = EXCLUDED.soil_temp
+            temperature = EXCLUDED.temperature
         """,
-        [(location_id, r["observed_at"], r["temperature"],
-          r["humidity"], r["rain"], r["soil_temp"]) for r in rows],
+        [(location_id, r["observed_at"], r["temperature"]) for r in rows],
     )
 
 
