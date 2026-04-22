@@ -22,7 +22,7 @@ import pg8000.dbapi as pg
 DB = dict(host="localhost", port=5432, database="imperial_db",
           user="postgres", password="Imperial")
 
-# psql bundled with pgAdmin — used to run .sql files reliably
+
 PSQL = r"C:\Users\chwon\AppData\Local\Programs\pgAdmin 4\runtime\psql.exe"
 
 SQL_DIR   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sql")
