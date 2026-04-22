@@ -14,7 +14,6 @@ cur.execute("SELECT COUNT(*) FROM locations")
 before = cur.fetchone()[0]
 print(f"Locations before: {before:,}")
 
-# Delete duplicates
 cur.execute("""
     DELETE FROM locations
     WHERE id NOT IN (
@@ -37,7 +36,6 @@ cur.execute("SELECT COUNT(*) FROM locations")
 after = cur.fetchone()[0]
 print(f"Locations after:  {after:,}")
 
-# Add unique constraint to prevent future duplicates
 cur.execute("""
     DO $$ BEGIN
         IF NOT EXISTS (
@@ -50,7 +48,7 @@ cur.execute("""
 conn.commit()
 print("UNIQUE constraint on (lat, lon) added.")
 
-# Summary
+
 cur.execute("""
     SELECT is_test_zone, COUNT(*)
     FROM   locations
