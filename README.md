@@ -96,7 +96,7 @@ Then connect to it:
 psql -U postgres -d imperial_db
 ```
 
-### 3a. Notes by operating system
+### 3b. Notes by operating system
 
 **Windows**
 
@@ -154,9 +154,9 @@ Restart PostgreSQL:
 sudo service postgresql restart
 ```
 
-### 3b. Run the SQL setup scripts
+### 3c. Run the SQL setup scripts
 
-From the terminal inside the `Weather-Interpolation` folder, execute the `psql -f` commands in order, and NOT from inside psql (Note that `psql` needs to be already in PATH and working. If not, follow instructions above):
+From the terminal inside the `Weather-Interpolation` folder, execute the `psql -f` commands in order, and NOT from inside psql (Note that `psql` needs to be already in PATH and working. If not, follow instructions in 3b.):
 
 ```bash
 psql -U postgres -d imperial_db -f sql/01_schema.sql
@@ -176,7 +176,7 @@ What each file does:
 | `03_seed_france.sql` | Inserts the 3,800 France grid points and marks the 10 test-zone cities |
 | `04_predict_function.sql` | Creates the `predict_temperature()` stored function |
 
-### 3c. Database credentials
+### 3d. Database credentials
 
 All Python scripts connect using these defaults (edit the `DB` dict at the top of
 `ingest.py` if your setup differs):
