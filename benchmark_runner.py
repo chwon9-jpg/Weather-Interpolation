@@ -204,7 +204,7 @@ BENCHMARKS = [
                     "CREATE INDEX IF NOT EXISTS idx_locations_geog_gist ON locations USING GIST(geog)",
                 ],
                 "query": """
-                    SELECT l.name, wo.observed_at, wo.temperature, wo.rain
+                    SELECT l.name, wo.observed_at, wo.temperature
                     FROM   weather_observations wo
                     JOIN   locations l ON l.id = wo.location_id
                     WHERE  ST_DWithin(l.geog,
