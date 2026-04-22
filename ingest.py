@@ -24,7 +24,6 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ─── CONFIG ──────────────────────────────────────────────────────────────────
 
 DB = dict(host="localhost", port=5432, database="imperial_db",
           user="postgres", password="Imperial")
@@ -43,8 +42,6 @@ LON_START, LON_END, LON_STEP = -5.0,  8.25, 0.18
 REQUEST_DELAY_S = 0.1
 
 
-# ─── GRID ────────────────────────────────────────────────────────────────────
-
 def france_grid() -> list[tuple[float, float]]:
     points, lat = [], LAT_START
     while lat <= LAT_END + 1e-9:
@@ -55,8 +52,6 @@ def france_grid() -> list[tuple[float, float]]:
         lat += LAT_STEP
     return points
 
-
-# ─── OPEN-METEO FETCH ────────────────────────────────────────────────────────
 
 def fetch_archive(lat: float, lon: float, start: str, end: str) -> list[dict]:
     r = requests.get(ARCHIVE_URL, params={
@@ -80,8 +75,6 @@ def _parse_hourly(data: dict) -> list[dict]:
         for i, ts in enumerate(data["time"])
     ]
 
-
-# ─── DATABASE ────────────────────────────────────────────────────────────────
 
 def connect():
     return pg.connect(**DB)
@@ -126,8 +119,6 @@ def upsert_observations(cur, location_id: int, rows: list[dict]) -> None:
     )
 
 
-# ─── BACKFILL ────────────────────────────────────────────────────────────────
-
 def backfill(year: int, month: int) -> None:
     days      = monthrange(year, month)[1]
     start_str = f"{year}-{month:02d}-01"
@@ -157,8 +148,6 @@ def backfill(year: int, month: int) -> None:
 
     log.info("Backfill complete.")
 
-
-# ─── MAIN ────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     if len(sys.argv) == 3 and sys.argv[1] == "backfill":
