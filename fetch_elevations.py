@@ -61,7 +61,7 @@ def main():
             log.warning("  Batch %d failed: %s", i // BATCH_SIZE, exc)
             conn.rollback()
 
-        time.sleep(3.0)
+        time.sleep(10.0)
 
     log.info("Done. %d locations updated.", updated)
     conn.close()

@@ -69,11 +69,10 @@ def idw(neighbours: list[tuple], query_elev: float = None) -> float:
     return weighted_sum / total_w
 
 
-def main():
+def evaluate() -> list[tuple]:
     conn = pg.connect(**DB)
     cur  = conn.cursor()
 
-    # Fetch all test zone locations with their city name and elevation
     cur.execute("""
         SELECT l.id, ST_AsText(l.geog) AS geog_wkt, l.elevation,
                (SELECT tz.name FROM test_zones tz ORDER BY tz.center_geog <-> l.geog LIMIT 1) AS city
@@ -82,7 +81,6 @@ def main():
     test_locs = cur.fetchall()
     log.info("Test locations: %d", len(test_locs))
 
-    # Fetch all March 2026 timestamps
     cur.execute("""
         SELECT DISTINCT observed_at FROM weather_observations
         WHERE observed_at >= '2026-03-01' AND observed_at < '2026-04-01'
@@ -127,30 +125,34 @@ def main():
 
     conn.close()
 
-    # Print results
+    results = []
+    for city in sorted(city_errors.keys()):
+        e = city_errors[city]
+        mae_f  = round(float(np.mean(e["fixed"])), 3)
+        mae_a  = round(float(np.mean(e["adaptive"]) if e["adaptive"] else mae_f), 3)
+        mae_l  = round(float(np.mean(e["lapse"])), 3)
+        rmse_f = round(float(np.sqrt(np.mean(e["fixed_sq"]))), 3)
+        rmse_a = round(float(np.sqrt(np.mean(e["adaptive_sq"])) if e["adaptive_sq"] else rmse_f), 3)
+        rmse_l = round(float(np.sqrt(np.mean(e["lapse_sq"]))), 3)
+        results.append((city, mae_f, mae_a, mae_l, rmse_f, rmse_a, rmse_l))
+
+    return results
+
+
+def main():
+    results = evaluate()
     print()
     print(f"{'City':<14} {'Fix MAE':<10} {'Adp MAE':<10} {'Lps MAE':<10} {'Fix RMSE':<10} {'Adp RMSE':<10} {'Lps RMSE':<10} Best")
     print("-" * 82)
-
-    all_f_mae, all_a_mae, all_l_mae = [], [], []
-    all_f_rmse, all_a_rmse, all_l_rmse = [], [], []
-    for city in sorted(city_errors.keys()):
-        e = city_errors[city]
-        mae_f  = np.mean(e["fixed"])
-        mae_a  = np.mean(e["adaptive"]) if e["adaptive"] else mae_f
-        mae_l  = np.mean(e["lapse"])
-        rmse_f = np.sqrt(np.mean(e["fixed_sq"]))
-        rmse_a = np.sqrt(np.mean(e["adaptive_sq"])) if e["adaptive_sq"] else rmse_f
-        rmse_l = np.sqrt(np.mean(e["lapse_sq"]))
-        best   = min(("Fixed", mae_f), ("Adaptive", mae_a), ("Lapse", mae_l), key=lambda x: x[1])[0]
-        all_f_mae.append(mae_f);  all_a_mae.append(mae_a);  all_l_mae.append(mae_l)
-        all_f_rmse.append(rmse_f); all_a_rmse.append(rmse_a); all_l_rmse.append(rmse_l)
+    for city, mae_f, mae_a, mae_l, rmse_f, rmse_a, rmse_l in results:
+        best = min(("Fixed", mae_f), ("Adaptive", mae_a), ("Lapse", mae_l), key=lambda x: x[1])[0]
         print(f"{city:<14} {mae_f:<10.3f} {mae_a:<10.3f} {mae_l:<10.3f} {rmse_f:<10.3f} {rmse_a:<10.3f} {rmse_l:<10.3f} {best}")
-
+    all_mae_f  = [r[1] for r in results]
+    all_mae_a  = [r[2] for r in results]
+    all_mae_l  = [r[3] for r in results]
+    all_rmse_f = [r[4] for r in results]
+    all_rmse_a = [r[5] for r in results]
+    all_rmse_l = [r[6] for r in results]
     print("-" * 82)
-    print(f"{'AVERAGE':<14} {np.mean(all_f_mae):<10.3f} {np.mean(all_a_mae):<10.3f} {np.mean(all_l_mae):<10.3f} "
-          f"{np.mean(all_f_rmse):<10.3f} {np.mean(all_a_rmse):<10.3f} {np.mean(all_l_rmse):<10.3f}")
-
-
-if __name__ == "__main__":
-    main()
+    print(f"{'AVERAGE':<14} {np.mean(all_mae_f):<10.3f} {np.mean(all_mae_a):<10.3f} {np.mean(all_mae_l):<10.3f} "
+          f"{np.mean(all_rmse_f):<10.3f} {np.mean(all_rmse_a):<10.3f} {np.mean(all_rmse_l):<10.3f}")

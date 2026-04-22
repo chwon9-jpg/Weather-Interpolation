@@ -51,8 +51,8 @@ SELECT
     pg_get_expr(child.relpartbound, child.oid) AS bounds,
     pg_relation_size(child.oid)            AS size_bytes,
     (SELECT COUNT(*) FROM weather_observations
-     WHERE observed_at >= (SELECT lo FROM
-         (SELECT lower(pg_get_expr(child.relpartbound, child.oid)::text) AS lo) t
+     WHERE observed_at >= (SELECT lo FROM(
+         (SELECT lower(pg_get_expr(child.relpartbound, child.oid)::text)::timestamptz AS lo) t
          LIMIT 1)
     )                                      AS approx_rows
 FROM   pg_inherits

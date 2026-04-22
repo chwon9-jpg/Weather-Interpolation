@@ -36,7 +36,7 @@
 <body>
 <header>
   <h1>France Weather Grid — Query Optimization Report</h1>
-  <p>Generated 2026-04-20 16:22:41 &nbsp;|&nbsp; Data: March 2026 &nbsp;|&nbsp;
+  <p>Generated 2026-04-22 18:36:25 &nbsp;|&nbsp; Data: March 2026 &nbsp;|&nbsp;
      Grid: France 0.18° (~3,800 points, ~20 km) &nbsp;|&nbsp; Test zones: 10 cities &nbsp;|&nbsp; k=5</p>
 </header>
 <main>
@@ -69,7 +69,7 @@
       labels: ['kNN Spatial Search', 'Radius Search (ST_DWithin)', 'Bounding Box Search (&&)', 'Time-Range Query'],
       datasets: [{
         label: 'Best speedup (x times faster)',
-        data: [93.3, 2.3, 1.0, 1.1],
+        data: [51.9, 6.4, 1.0, 1.3],
         backgroundColor: [
           'rgba(26, 58, 92, 0.85)',
           'rgba(40, 167, 69, 0.80)',
@@ -107,10 +107,10 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;margin-top:0.8rem">
     <table>
       <thead><tr><th>Strategy</th><th>Execution Time</th><th>Speedup vs baseline</th></tr></thead>
-      <tbody><tr><td>No index — step 1 only (seq scan)</td><td>52.92 ms</td><td>baseline</td></tr>
-<tr><td>No index — full pipeline (both searches)</td><td>61.14 ms</td><td>baseline</td></tr>
-<tr><td>GiST — step 1 only (20 neighbours)</td><td>0.57 ms</td><td><span class="badge fast">93.3×</span></td></tr>
-<tr><td>GiST — full pipeline (both searches)</td><td>1.12 ms</td><td><span class="badge fast">54.4×</span></td></tr>
+      <tbody><tr><td>No index — step 1 only (seq scan)</td><td>3.68 ms</td><td>baseline</td></tr>
+<tr><td>No index — full pipeline (both searches)</td><td>8.91 ms</td><td>baseline</td></tr>
+<tr><td>GiST — step 1 only (20 neighbours)</td><td>0.07 ms</td><td><span class="badge fast">51.9×</span></td></tr>
+<tr><td>GiST — full pipeline (both searches)</td><td>1.07 ms</td><td><span class="badge mid">8.3×</span></td></tr>
 </tbody>
     </table>
     <div><canvas id="benchChart_knn"></canvas></div>
@@ -122,7 +122,7 @@
       labels: ['No index — step 1 only (seq scan)', 'No index — full pipeline (both searches)', 'GiST — step 1 only (20 neighbours)', 'GiST — full pipeline (both searches)'],
       datasets: [{
         label: 'Execution time (ms)',
-        data: [52.92, 61.14, 0.57, 1.12],
+        data: [3.68, 8.91, 0.07, 1.07],
         backgroundColor: ['rgba(220,53,69,0.80)', 'rgba(26,58,92,0.80)', 'rgba(26,58,92,0.80)', 'rgba(26,58,92,0.80)'],
         borderRadius: 4,
       }]
@@ -151,8 +151,8 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;margin-top:0.8rem">
     <table>
       <thead><tr><th>Strategy</th><th>Execution Time</th><th>Speedup vs baseline</th></tr></thead>
-      <tbody><tr><td>No index (seq scan)</td><td>16.67 ms</td><td>baseline</td></tr>
-<tr><td>GiST index</td><td>7.22 ms</td><td><span class="badge mid">2.3×</span></td></tr>
+      <tbody><tr><td>No index (seq scan)</td><td>3.51 ms</td><td>baseline</td></tr>
+<tr><td>GiST index</td><td>0.55 ms</td><td><span class="badge mid">6.4×</span></td></tr>
 </tbody>
     </table>
     <div><canvas id="benchChart_radius"></canvas></div>
@@ -164,7 +164,7 @@
       labels: ['No index (seq scan)', 'GiST index'],
       datasets: [{
         label: 'Execution time (ms)',
-        data: [16.67, 7.22],
+        data: [3.51, 0.55],
         backgroundColor: ['rgba(220,53,69,0.80)', 'rgba(26,58,92,0.80)'],
         borderRadius: 4,
       }]
@@ -193,8 +193,8 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;margin-top:0.8rem">
     <table>
       <thead><tr><th>Strategy</th><th>Execution Time</th><th>Speedup vs baseline</th></tr></thead>
-      <tbody><tr><td>No index (seq scan)</td><td>21.76 ms</td><td>baseline</td></tr>
-<tr><td>GiST index</td><td>21.03 ms</td><td><span class="badge mid">1.0×</span></td></tr>
+      <tbody><tr><td>No index (seq scan)</td><td>0.82 ms</td><td>baseline</td></tr>
+<tr><td>GiST index</td><td>0.79 ms</td><td><span class="badge mid">1.0×</span></td></tr>
 </tbody>
     </table>
     <div><canvas id="benchChart_bbox"></canvas></div>
@@ -206,7 +206,7 @@
       labels: ['No index (seq scan)', 'GiST index'],
       datasets: [{
         label: 'Execution time (ms)',
-        data: [21.76, 21.03],
+        data: [0.82, 0.79],
         backgroundColor: ['rgba(220,53,69,0.80)', 'rgba(26,58,92,0.80)'],
         borderRadius: 4,
       }]
@@ -235,10 +235,10 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start;margin-top:0.8rem">
     <table>
       <thead><tr><th>Strategy</th><th>Execution Time</th><th>Speedup vs baseline</th></tr></thead>
-      <tbody><tr><td>No index (seq scan)</td><td>2072.38 ms</td><td>baseline</td></tr>
-<tr><td>BRIN index</td><td>2084.96 ms</td><td><span class="badge mid">1.0×</span></td></tr>
-<tr><td>B-tree index</td><td>1854.10 ms</td><td><span class="badge mid">1.1×</span></td></tr>
-<tr><td>GiST + B-tree (combined)</td><td>2603.52 ms</td><td><span class="badge mid">0.8×</span></td></tr>
+      <tbody><tr><td>No index (seq scan)</td><td>63.04 ms</td><td>baseline</td></tr>
+<tr><td>BRIN index</td><td>112.18 ms</td><td><span class="badge mid">0.6×</span></td></tr>
+<tr><td>B-tree index</td><td>50.80 ms</td><td><span class="badge mid">1.2×</span></td></tr>
+<tr><td>GiST + B-tree (combined)</td><td>48.66 ms</td><td><span class="badge mid">1.3×</span></td></tr>
 </tbody>
     </table>
     <div><canvas id="benchChart_time"></canvas></div>
@@ -250,7 +250,7 @@
       labels: ['No index (seq scan)', 'BRIN index', 'B-tree index', 'GiST + B-tree (combined)'],
       datasets: [{
         label: 'Execution time (ms)',
-        data: [2072.38, 2084.96, 1854.1, 2603.52],
+        data: [63.04, 112.18, 50.8, 48.66],
         backgroundColor: ['rgba(220,53,69,0.80)', 'rgba(26,58,92,0.80)', 'rgba(26,58,92,0.80)', 'rgba(26,58,92,0.80)'],
         borderRadius: 4,
       }]
@@ -305,19 +305,19 @@
       datasets: [
         {
           label: 'Fixed k=5',
-          data: [0.834, 0.31, 2.081, 0.236, 0.714, 0.339, 0.399, 0.237, 0.519, 0.348],
+          data: [0.905, 0.306, 1.419, 0.207, 0.758, 0.379, 0.363, 0.352, 0.578, 0.399],
           backgroundColor: 'rgba(220, 53, 69, 0.78)',
           borderRadius: 4,
         },
         {
           label: 'Adaptive k',
-          data: [0.739, 0.325, 2.965, 0.244, 0.696, 0.343, 0.396, 0.235, 0.509, 0.368],
+          data: [0.713, 0.31, 2.144, 0.218, 0.766, 0.394, 0.375, 0.346, 0.612, 0.407],
           backgroundColor: 'rgba(255, 193, 7, 0.85)',
           borderRadius: 4,
         },
         {
           label: 'Adaptive k + Lapse Rate',
-          data: [0.586, 0.326, 0.856, 0.234, 0.575, 0.253, 0.405, 0.197, 0.51, 0.358],
+          data: [0.58, 0.332, 0.764, 0.195, 0.573, 0.285, 0.365, 0.245, 0.586, 0.376],
           backgroundColor: 'rgba(26, 58, 92, 0.85)',
           borderRadius: 4,
         }
@@ -349,19 +349,19 @@
       datasets: [
         {
           label: 'Fixed k=5',
-          data: [1.264, 0.425, 2.492, 0.333, 0.926, 0.459, 0.559, 0.337, 0.693, 0.492],
+          data: [1.326, 0.41, 1.82, 0.291, 0.965, 0.519, 0.508, 0.458, 0.739, 0.551],
           backgroundColor: 'rgba(220, 53, 69, 0.78)',
           borderRadius: 4,
         },
         {
           label: 'Adaptive k',
-          data: [1.071, 0.444, 3.476, 0.346, 0.898, 0.457, 0.547, 0.331, 0.674, 0.51],
+          data: [1.017, 0.412, 2.59, 0.306, 0.977, 0.531, 0.517, 0.444, 0.774, 0.558],
           backgroundColor: 'rgba(255, 193, 7, 0.85)',
           borderRadius: 4,
         },
         {
           label: 'Adaptive k + Lapse Rate',
-          data: [0.789, 0.436, 1.097, 0.334, 0.774, 0.359, 0.548, 0.292, 0.706, 0.485],
+          data: [0.775, 0.428, 0.99, 0.28, 0.786, 0.413, 0.495, 0.358, 0.798, 0.513],
           backgroundColor: 'rgba(26, 58, 92, 0.85)',
           borderRadius: 4,
         }
@@ -390,29 +390,29 @@
       <th>Adaptive+Lapse MAE</th><th>Adaptive+Lapse RMSE</th>
       <th>Best</th>
     </tr></thead>
-    <tbody><tr><td>Avignon</td><td>0.834</td><td>1.264</td><td>0.739</td><td>1.071</td><td>0.586</td><td>0.789</td><td><strong>Adaptive+Lapse</strong></td></tr>
-<tr><td>Bordeaux</td><td>0.31</td><td>0.425</td><td>0.325</td><td>0.444</td><td>0.326</td><td>0.436</td><td><strong>Fixed k=5</strong></td></tr>
-<tr><td>Grenoble</td><td>2.081</td><td>2.492</td><td>2.965</td><td>3.476</td><td>0.856</td><td>1.097</td><td><strong>Adaptive+Lapse</strong></td></tr>
-<tr><td>Lille</td><td>0.236</td><td>0.333</td><td>0.244</td><td>0.346</td><td>0.234</td><td>0.334</td><td><strong>Adaptive+Lapse</strong></td></tr>
-<tr><td>Lyon</td><td>0.714</td><td>0.926</td><td>0.696</td><td>0.898</td><td>0.575</td><td>0.774</td><td><strong>Adaptive+Lapse</strong></td></tr>
-<tr><td>Nantes</td><td>0.339</td><td>0.459</td><td>0.343</td><td>0.457</td><td>0.253</td><td>0.359</td><td><strong>Adaptive+Lapse</strong></td></tr>
-<tr><td>Paris</td><td>0.399</td><td>0.559</td><td>0.396</td><td>0.547</td><td>0.405</td><td>0.548</td><td><strong>Adaptive k</strong></td></tr>
-<tr><td>Rennes</td><td>0.237</td><td>0.337</td><td>0.235</td><td>0.331</td><td>0.197</td><td>0.292</td><td><strong>Adaptive+Lapse</strong></td></tr>
-<tr><td>Strasbourg</td><td>0.519</td><td>0.693</td><td>0.509</td><td>0.674</td><td>0.51</td><td>0.706</td><td><strong>Adaptive k</strong></td></tr>
-<tr><td>Toulouse</td><td>0.348</td><td>0.492</td><td>0.368</td><td>0.51</td><td>0.358</td><td>0.485</td><td><strong>Fixed k=5</strong></td></tr>
+    <tbody><tr><td>Avignon</td><td>0.905</td><td>1.326</td><td>0.713</td><td>1.017</td><td>0.58</td><td>0.775</td><td><strong>Adaptive+Lapse</strong></td></tr>
+<tr><td>Bordeaux</td><td>0.306</td><td>0.41</td><td>0.31</td><td>0.412</td><td>0.332</td><td>0.428</td><td><strong>Fixed k=5</strong></td></tr>
+<tr><td>Grenoble</td><td>1.419</td><td>1.82</td><td>2.144</td><td>2.59</td><td>0.764</td><td>0.99</td><td><strong>Adaptive+Lapse</strong></td></tr>
+<tr><td>Lille</td><td>0.207</td><td>0.291</td><td>0.218</td><td>0.306</td><td>0.195</td><td>0.28</td><td><strong>Adaptive+Lapse</strong></td></tr>
+<tr><td>Lyon</td><td>0.758</td><td>0.965</td><td>0.766</td><td>0.977</td><td>0.573</td><td>0.786</td><td><strong>Adaptive+Lapse</strong></td></tr>
+<tr><td>Nantes</td><td>0.379</td><td>0.519</td><td>0.394</td><td>0.531</td><td>0.285</td><td>0.413</td><td><strong>Adaptive+Lapse</strong></td></tr>
+<tr><td>Paris</td><td>0.363</td><td>0.508</td><td>0.375</td><td>0.517</td><td>0.365</td><td>0.495</td><td><strong>Fixed k=5</strong></td></tr>
+<tr><td>Rennes</td><td>0.352</td><td>0.458</td><td>0.346</td><td>0.444</td><td>0.245</td><td>0.358</td><td><strong>Adaptive+Lapse</strong></td></tr>
+<tr><td>Strasbourg</td><td>0.578</td><td>0.739</td><td>0.612</td><td>0.774</td><td>0.586</td><td>0.798</td><td><strong>Fixed k=5</strong></td></tr>
+<tr><td>Toulouse</td><td>0.399</td><td>0.551</td><td>0.407</td><td>0.558</td><td>0.376</td><td>0.513</td><td><strong>Adaptive+Lapse</strong></td></tr>
 </tbody>
   </table>
   <div style="margin-top:1.5rem;">
-    <div class="metric"><div class="val">0.602 °C</div><div class="lbl">Fixed k=5 avg MAE</div></div>
-    <div class="metric"><div class="val">0.682 °C</div><div class="lbl">Adaptive k avg MAE</div></div>
-    <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">0.430 °C</div><div class="lbl">Adaptive+Lapse avg MAE</div></div>
-    <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">−28.6%</div><div class="lbl">Overall MAE improvement</div></div>
+   <div class="metric"><div class="val">0.567 °C</div><div class="lbl">Fixed k=5 avg MAE</div></div>
+   <div class="metric"><div class="val">0.629 °C</div><div class="lbl">Adaptive k avg MAE</div></div>
+   <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">0.43 °C</div><div class="lbl">Adaptive+Lapse avg MAE</div></div>
+   <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">−24.1%</div><div class="lbl">Overall MAE improvement</div></div>
   </div>
 </div>
 
 <h2>4. Index Sizes on Disk</h2>
 <div class="card">
-  <table><thead><tr><th>Index</th><th>Size on disk</th></tr></thead><tbody><tr><td>idx_locations_geog_gist</td><td>408 kB</td></tr>
+  <table><thead><tr><th>Index</th><th>Size on disk</th></tr></thead><tbody><tr><td>idx_locations_geog_gist</td><td>272 kB</td></tr>
 <tr><td>idx_obs_time_brin</td><td>N/A (not created)</td></tr>
 <tr><td>idx_obs_time_btree</td><td>0 bytes</td></tr>
 <tr><td>idx_obs_loc_time</td><td>0 bytes</td></tr>

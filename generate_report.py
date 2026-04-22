@@ -6,11 +6,13 @@ then produces a self-contained HTML report (report.html).
 Requirements: pip install pg8000
 Usage:        python generate_report.py
 """
-
+import numpy as np
 import os
+import subprocess, sys
 import pg8000.dbapi as pg
 from datetime import datetime
 from benchmark_runner import run_all, DB
+from evaluate_adaptive_k import evaluate
 
 PREDICTION_SQL = """
 WITH test_obs AS (
@@ -306,10 +308,10 @@ HTML = """<!DOCTYPE html>
     <tbody>{strategy_table}</tbody>
   </table>
   <div style="margin-top:1.5rem;">
-    <div class="metric"><div class="val">0.602 °C</div><div class="lbl">Fixed k=5 avg MAE</div></div>
-    <div class="metric"><div class="val">0.682 °C</div><div class="lbl">Adaptive k avg MAE</div></div>
-    <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">0.430 °C</div><div class="lbl">Adaptive+Lapse avg MAE</div></div>
-    <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">−28.6%</div><div class="lbl">Overall MAE improvement</div></div>
+   <div class="metric"><div class="val">{avg_mae_f} °C</div><div class="lbl">Fixed k=5 avg MAE</div></div>
+   <div class="metric"><div class="val">{avg_mae_a} °C</div><div class="lbl">Adaptive k avg MAE</div></div>
+   <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">{avg_mae_l} °C</div><div class="lbl">Adaptive+Lapse avg MAE</div></div>
+   <div class="metric" style="background:#d4edda;"><div class="val" style="color:#155724;">−{improvement}%</div><div class="lbl">Overall MAE improvement</div></div>
   </div>
 </div>
 
@@ -324,25 +326,11 @@ HTML = """<!DOCTYPE html>
 """
 
 
-# Pre-computed evaluation results (March 2026)
-# (city, fixed_mae, adaptive_mae, lapse_mae, fixed_rmse, adaptive_rmse, lapse_rmse)
-STRATEGY_RESULTS = [
-    ("Avignon",    0.834, 0.739, 0.586, 1.264, 1.071, 0.789),
-    ("Bordeaux",   0.310, 0.325, 0.326, 0.425, 0.444, 0.436),
-    ("Grenoble",   2.081, 2.965, 0.856, 2.492, 3.476, 1.097),
-    ("Lille",      0.236, 0.244, 0.234, 0.333, 0.346, 0.334),
-    ("Lyon",       0.714, 0.696, 0.575, 0.926, 0.898, 0.774),
-    ("Nantes",     0.339, 0.343, 0.253, 0.459, 0.457, 0.359),
-    ("Paris",      0.399, 0.396, 0.405, 0.559, 0.547, 0.548),
-    ("Rennes",     0.237, 0.235, 0.197, 0.337, 0.331, 0.292),
-    ("Strasbourg", 0.519, 0.509, 0.510, 0.693, 0.674, 0.706),
-    ("Toulouse",   0.348, 0.368, 0.358, 0.492, 0.510, 0.485),
-]
 
 
-def build_strategy_table() -> str:
+def build_strategy_table(results) -> str:
     rows = ""
-    for city, f_mae, a_mae, l_mae, f_rmse, a_rmse, l_rmse in STRATEGY_RESULTS:
+    for city, f_mae, a_mae, l_mae, f_rmse, a_rmse, l_rmse in results:
         best_val  = min(f_mae, a_mae, l_mae)
         best_name = {f_mae: "Fixed k=5", a_mae: "Adaptive k", l_mae: "Adaptive+Lapse"}[best_val]
         rows += (f"<tr><td>{city}</td>"
@@ -482,10 +470,16 @@ def main():
     bench_results = run_all()
 
     print("\nRunning prediction evaluation ...")
+    STRATEGY_RESULTS = evaluate()
     conn = pg.connect(**DB)
     cur  = conn.cursor()
     index_html = build_index_sizes(cur)
     conn.close()
+
+    all_mae_f   = np.mean([r[1] for r in STRATEGY_RESULTS])
+    all_mae_a   = np.mean([r[2] for r in STRATEGY_RESULTS])
+    all_mae_l   = np.mean([r[3] for r in STRATEGY_RESULTS])
+    improvement = round((1 - all_mae_l / all_mae_f) * 100, 1)
 
     speedup_labels = [r["benchmark"]["name"] for r in bench_results]
     speedup_values = [
@@ -509,8 +503,12 @@ def main():
         strategy_fixed_rmse    = [r[4] for r in STRATEGY_RESULTS],
         strategy_adaptive_rmse = [r[5] for r in STRATEGY_RESULTS],
         strategy_lapse_rmse    = [r[6] for r in STRATEGY_RESULTS],
-        strategy_table         = build_strategy_table(),
-        index_sizes        = index_html,
+        strategy_table         = build_strategy_table(STRATEGY_RESULTS),
+        index_sizes            = index_html,
+        avg_mae_f              = round(float(all_mae_f), 3),
+        avg_mae_a              = round(float(all_mae_a), 3),
+        avg_mae_l              = round(float(all_mae_l), 3),
+        improvement            = improvement,
     )
 
     output = "report.html"
@@ -518,7 +516,10 @@ def main():
         f.write(html)
 
     print(f"Report saved → {output}")
-    os.startfile(os.path.abspath(output))
+    if sys.platform == "win32":
+      os.startfile(os.path.abspath(output))
+    else:
+      subprocess.call(["xdg-open", os.path.abspath(output)])
 
 
 if __name__ == "__main__":
