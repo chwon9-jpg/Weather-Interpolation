@@ -2,16 +2,10 @@
 -- Adaptive kNN temperature prediction with lapse rate correction.
 --
 -- Parameters:
---   p_lon        longitude of query point
---   p_lat        latitude of query point
---   p_timestamp  UTC hour to predict
---   p_elevation  elevation of query point in metres (optional — if NULL,
---                uses the nearest grid point's elevation as proxy)
---
--- Usage (from psql):
---   SELECT * FROM predict_temperature(2.352, 48.857, '2026-03-15 12:00+00');
---   SELECT * FROM predict_temperature(5.724, 45.188, '2026-03-15 12:00+00', 212);
---   SELECT * FROM predict_temperature(-0.579, 44.838, '2026-03-10 06:00+00');
+-- p_lon is longitude of query point
+-- p_lat is latitude of query point
+-- p_timestamp is UTC hour to predict
+-- p_elevation is elevation of query point in metres (optional — if NULL, uses the nearest grid point's elevation as proxy)
 
 CREATE OR REPLACE FUNCTION predict_temperature(
     p_lon         DOUBLE PRECISION,
@@ -34,7 +28,6 @@ DECLARE
     v_query_elev  DOUBLE PRECISION;
     lapse_rate    CONSTANT DOUBLE PRECISION := 0.0065;
 BEGIN
-    -- Step 1: resolve query point elevation
     IF p_elevation IS NOT NULL THEN
         v_query_elev := p_elevation;
     ELSE
@@ -45,7 +38,6 @@ BEGIN
         LIMIT  1;
     END IF;
 
-    -- Step 2: elevation stddev of 20 nearest training points -> k
     SELECT COALESCE(STDDEV(elevation), 0)
     INTO   v_elev_stddev
     FROM (
@@ -57,7 +49,7 @@ BEGIN
 
     v_k := GREATEST(3, LEAST(8, ROUND(8 - 5 * (v_elev_stddev / 400.0))));
 
-    -- Step 3: IDW with lapse rate correction
+
     RETURN QUERY
     SELECT
         ROUND((
