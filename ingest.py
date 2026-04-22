@@ -74,12 +74,6 @@ def connect():
     return pg.connect(**DB)
 
 
-def ensure_partition(conn, month_start: str) -> None:
-    cur = conn.cursor()
-    cur.execute("SELECT create_monthly_partition(%s::date)", (month_start,))
-    conn.commit()
-
-
 def get_or_create_location(cur, lat: float, lon: float) -> int:
     cur.execute(
         "SELECT id FROM locations WHERE lat = %s AND lon = %s LIMIT 1",
@@ -118,7 +112,6 @@ def backfill(year: int, month: int) -> None:
     log.info("Backfill %s → %s for %d grid points", start_str, end_str, len(grid))
 
     conn = connect()
-    ensure_partition(conn, start_str)
 
     try:
         for idx, (lat, lon) in enumerate(grid, 1):
