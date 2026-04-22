@@ -93,7 +93,7 @@ CREATE DATABASE imperial_db;
 Then connect to it:
 
 ```bash
-psql -U postgres -d imperial_db or \imperial_db
+psql -U postgres -d imperial_db or \c imperial_db
 ```
 
 ### 3b. Run the SQL setup scripts
