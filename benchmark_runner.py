@@ -2,8 +2,8 @@
 benchmark_runner.py
 Runs each spatial/temporal benchmark with and without indexes.
 For every scenario it captures EXPLAIN ANALYZE timing and prints:
-  1. A formatted side-by-side comparison table (console)
-  2. Raw EXPLAIN ANALYZE plan saved to benchmark_results/
+1. A formatted side-by-side comparison table
+2. Raw EXPLAIN ANALYZE plan saved to benchmark_results/
 
 Requirements: pip install pg8000
 Usage:        python benchmark_runner.py
