@@ -156,7 +156,7 @@ sudo service postgresql restart
 
 ### 3b. Run the SQL setup scripts
 
-From the terminal inside the `Weather-Interpolation` folder, execute the `psql -f` commands in order, and NOT from inside psql:
+From the terminal inside the `Weather-Interpolation` folder, execute the `psql -f` commands in order, and NOT from inside psql (Note that `psql` needs to be already in PATH and working. If not, follow instructions above):
 
 ```bash
 psql -U postgres -d imperial_db -f sql/01_schema.sql
