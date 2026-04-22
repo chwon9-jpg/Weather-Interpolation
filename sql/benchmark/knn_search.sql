@@ -1,6 +1,6 @@
 -- benchmark/knn_search.sql
 -- Compares kNN spatial search performance with and without a GiST index.
--- Target: 5 nearest grid points to Paris (48.857°N, 2.352°E).
+-- Target: 5 nearest grid points to Paris (48.857 degrees North, 2.352 degrees East).
 
 -- BASELINE: sequential scan (no spatial index)
 DROP INDEX IF EXISTS idx_locations_geog_gist;

@@ -1,6 +1,6 @@
 -- benchmark/radius_search.sql
 -- Compares radius search (ST_DWithin) with no index vs. GiST index.
--- Target: all grid points within 150 km of Lyon (45.764°N, 4.836°E).
+-- Target: all grid points within 150 km of Lyon (45.764 degrees North, 4.836 degrees East).
 
 -- BASELINE: sequential scan
 DROP INDEX IF EXISTS idx_locations_geog_gist;

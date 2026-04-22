@@ -1,6 +1,6 @@
 -- benchmark/bbox_search.sql
 -- Compares bounding-box search performance with no index vs. GiST index.
--- Target: all grid points inside southern France (lat 42–45°N, lon -2–8°E).
+-- Target: all grid points inside southern France (lat 42-45 degrees North of Earth's equator, lon -2–8 degrees East).
 
 -- BASELINE: sequential scan
 DROP INDEX IF EXISTS idx_locations_geog_gist;
