@@ -9,7 +9,6 @@ Output: france_grid.html  (open in any browser for presentation)
 
 import folium
 
-# ─── FRANCE 0.18° GRID (~20 km spacing) ─────────────────────────────────────
 
 LAT_START, LAT_END, LAT_STEP = 42.0, 51.25, 0.18
 LON_START, LON_END, LON_STEP = -5.0,  8.25, 0.18
@@ -26,7 +25,6 @@ def france_grid() -> list[tuple[float, float]]:
     return points
 
 
-# ─── TEST ZONE CITIES with proportional exclusion radii ──────────────────────
 
 TEST_ZONES = [
     {"name": "Paris",      "lat": 48.857, "lon":  2.352, "radius_km": 40},
@@ -42,17 +40,14 @@ TEST_ZONES = [
 ]
 
 
-# ─── BUILD MAP ───────────────────────────────────────────────────────────────
 
 def build_map() -> folium.Map:
-    # Centre the map over France
     m = folium.Map(
         location=[46.5, 2.5],
         zoom_start=6,
         tiles="CartoDB positron",  
     )
 
-    # ── Legend (HTML overlay) ────────────────────────────────────────────────
     legend_html = """
     <div style="position:fixed; bottom:30px; left:30px; z-index:1000;
                 background:white; padding:12px 16px; border-radius:8px;
@@ -65,7 +60,6 @@ def build_map() -> folium.Map:
     """
     m.get_root().html.add_child(folium.Element(legend_html))
 
-    # ── Training grid points ─────────────────────────────────────────────────
     grid_layer = folium.FeatureGroup(name="Training grid points")
     for lat, lon in france_grid():
         folium.CircleMarker(
@@ -80,7 +74,6 @@ def build_map() -> folium.Map:
         ).add_to(grid_layer)
     grid_layer.add_to(m)
 
-    # ── Test zone cities + exclusion rings ───────────────────────────────────
     zone_layer = folium.FeatureGroup(name="Test zones (withheld cities)")
     for city in TEST_ZONES:
         radius_m = city["radius_km"] * 1000
@@ -113,7 +106,6 @@ def build_map() -> folium.Map:
 
     zone_layer.add_to(m)
 
-    # Layer toggle (top-right corner of map)
     folium.LayerControl(collapsed=False).add_to(m)
 
     return m
