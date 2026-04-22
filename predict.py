@@ -8,7 +8,7 @@ Uses adaptive kNN IDW with lapse rate correction:
   - Each neighbour's temperature is lapse-rate corrected to query elevation
   - k corrected temperatures are inverse-distance weighted
 
-Lapse rate: 6.5 C per 1000m (standard environmental lapse rate)
+Lapse rate: 6.5 degrees Celsius per 1000m (standard environmental lapse rate)
 
 Usage:
     python predict.py <longitude> <latitude> <YYYY-MM-DD HH:00>
