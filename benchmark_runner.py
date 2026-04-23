@@ -150,6 +150,23 @@ BENCHMARKS = [
                     ORDER  BY l.lat, l.lon
                 """,
             },
+            {
+            "label": "B-tree index (lat/lon)",
+            "setup": [
+                "DROP INDEX IF EXISTS idx_locations_geog_gist",
+                "DROP INDEX IF EXISTS idx_locations_lat_btree",
+                "DROP INDEX IF EXISTS idx_locations_lon_btree",
+                "CREATE INDEX idx_locations_lat_btree ON locations(lat)",
+                "CREATE INDEX idx_locations_lon_btree ON locations(lon)",
+            ],
+            "query": """
+                SELECT l.name, l.lat, l.lon
+                FROM   locations l
+                WHERE  l.lat BETWEEN 42.0 AND 45.0
+                AND  l.lon BETWEEN -2.0 AND  8.0
+                ORDER  BY l.lat, l.lon
+            """,
+            },
         ],
     },
     {
