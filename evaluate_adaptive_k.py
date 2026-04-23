@@ -47,11 +47,12 @@ def get_neighbours(cur, geog_wkt: str, observed_at, k: int) -> list[tuple]:
     """Return (temperature, elevation, distance_m) for k nearest training points."""
     cur.execute(f"""
         SELECT wo.temperature, l.elevation, ST_Distance(l.geog, '{geog_wkt}'::geography)
-        FROM training_observations wo
+        FROM weather_observations wo
         JOIN locations l ON l.id = wo.location_id
         WHERE wo.observed_at = %s
           AND wo.temperature IS NOT NULL
           AND l.elevation IS NOT NULL
+          AND l.is_test_zone = FALSE
         ORDER BY l.geog <-> '{geog_wkt}'::geography
         LIMIT {k}
     """, (observed_at,))
@@ -156,3 +157,6 @@ def main():
     print("-" * 82)
     print(f"{'AVERAGE':<14} {np.mean(all_mae_f):<10.3f} {np.mean(all_mae_a):<10.3f} {np.mean(all_mae_l):<10.3f} "
           f"{np.mean(all_rmse_f):<10.3f} {np.mean(all_rmse_a):<10.3f} {np.mean(all_rmse_l):<10.3f}")
+    
+if __name__ == "__main__":
+    main()
